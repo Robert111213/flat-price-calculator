@@ -15,9 +15,6 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title(" Калькулятор рыночной стоимости квартиры")
-st.markdown("---")
-
 @st.cache_resource
 def load_model():
     try:
@@ -27,7 +24,9 @@ def load_model():
         st.error("Файл модели не найден! Сначала запусти train_model.py")
         return None
 
-@st.cache_data
+# Временно отключаем загрузку model_info
+model_info = None
+model = load_model()
 def load_model_info():
     try:
         return joblib.load('model_info.pkl')
@@ -183,3 +182,4 @@ with st.sidebar:
 st.markdown("---")
 
 st.markdown("© 2026 Калькулятор цен на квартиры")
+
