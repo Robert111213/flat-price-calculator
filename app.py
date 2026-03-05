@@ -35,7 +35,7 @@ def load_model_info():
         return None
 
 model = load_model()
-model_info = load_model_info()
+model_info = None
 
 col1, col2 = st.columns([1, 1])
 
@@ -181,4 +181,5 @@ with st.sidebar:
     """)
 
 st.markdown("---")
+
 st.markdown("© 2026 Калькулятор цен на квартиры")
