@@ -12,10 +12,7 @@ from datetime import datetime
 st.set_page_config(
     page_title="Калькулятор цен на квартиры",
     page_icon="",
-    layout="wide"
-)
-
-@st.cache_resource
+   @st.cache_resource
 def load_model():
     try:
         model = joblib.load('flat_price_model.pkl')
@@ -24,10 +21,11 @@ def load_model():
         st.error("Файл модели не найден! Сначала запусти train_model.py")
         return None
 
-# Временно отключаем загрузку model_info
-model_info = None
+# Загружаем только модель, без model_info
 model = load_model()
-def load_model_info():
+model_info = None  # временно отключаем
+
+# Остальной код оставляем без изменений
     try:
         return joblib.load('model_info.pkl')
     except:
@@ -182,4 +180,5 @@ with st.sidebar:
 st.markdown("---")
 
 st.markdown("© 2026 Калькулятор цен на квартиры")
+
 
