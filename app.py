@@ -12,7 +12,14 @@ from datetime import datetime
 st.set_page_config(
     page_title="Калькулятор цен на квартиры",
     page_icon="",
-   @st.cache_resource
+    layout="wide"
+)
+
+st.title("Калькулятор рыночной стоимости квартиры")
+st.markdown("---")
+
+# Загружаем только модель
+@st.cache_resource
 def load_model():
     try:
         model = joblib.load('flat_price_model.pkl')
@@ -20,15 +27,8 @@ def load_model():
     except FileNotFoundError:
         st.error("Файл модели не найден! Сначала запусти train_model.py")
         return None
-
-# Загружаем только модель, без model_info
-model = load_model()
-model_info = None  # временно отключаем
-
-# Остальной код оставляем без изменений
-    try:
-        return joblib.load('model_info.pkl')
-    except:
+    except Exception as e:
+        st.error(f"Ошибка при загрузке модели: {e}")
         return None
 
 model = load_model()
@@ -37,7 +37,7 @@ model_info = None
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    st.subheader(" Параметры квартиры")
+    st.subheader("Параметры квартиры")
     
     with st.form("apartment_form"):
         area = st.number_input(
@@ -75,20 +75,20 @@ with col1:
         submitted = st.form_submit_button("Рассчитать стоимость", type="primary", use_container_width=True)
 
 with col2:
-    st.subheader(" Результат расчета")
+    st.subheader("Результат расчета")
     
     if model is not None:
         if submitted:
-            # ВАЖНО: названия столбцов должны совпадать с train_model.py
-            input_data = pd.DataFrame({
-                'Площадь': [area],
-                'Комнат': [rooms],           # именно 'Комнат'
-                'Этаж': [floor_type],
-                'Район': [district],
-                'Состояние': [condition]
-            })
-            
             try:
+                # Создаем DataFrame с введенными данными
+                input_data = pd.DataFrame({
+                    'Площадь': [area],
+                    'Комнат': [rooms],
+                    'Этаж': [floor_type],
+                    'Район': [district],
+                    'Состояние': [condition]
+                })
+                
                 predicted_price = model.predict(input_data)[0]
                 
                 price_min = predicted_price * 0.95
@@ -99,15 +99,16 @@ with col2:
                     value=f"{predicted_price:,.0f} ₽"
                 )
                 
-                st.info(f" Диапазон вероятной стоимости:\n{price_min:,.0f} ₽ — {price_max:,.0f} ₽")
+                st.info(f"Диапазон вероятной стоимости: {price_min:,.0f} ₽ — {price_max:,.0f} ₽")
                 
-                st.subheader(" Введенные параметры")
+                st.subheader("Введенные параметры")
                 params_df = pd.DataFrame({
                     'Параметр': ['Площадь', 'Комнат', 'Этаж', 'Район', 'Состояние'],
                     'Значение': [f"{area} м²", rooms, floor_type, district, condition]
                 })
                 st.table(params_df)
                 
+                # Сохраняем в историю
                 if 'history' not in st.session_state:
                     st.session_state.history = []
                 
@@ -124,29 +125,19 @@ with col2:
             except Exception as e:
                 st.error(f"Ошибка при расчете: {e}")
         else:
-            st.info(" Заполните параметры квартиры слева и нажмите 'Рассчитать стоимость'")
+            st.info("Заполните параметры квартиры слева и нажмите 'Рассчитать стоимость'")
     else:
-        st.error(" Модель не загружена. Сначала запустите train_model.py")
+        st.error("Модель не загружена. Сначала запустите train_model.py")
 
 st.markdown("---")
 
-tab1, tab2, tab3 = st.tabs([" О модели", " Статистика", " История расчетов"])
+# Создаем вкладки
+tab1, tab2, tab3 = st.tabs(["О модели", "Статистика", "История расчетов"])
 
 with tab1:
     st.subheader("О модели машинного обучения")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    if model_info:
-        with col1:
-            st.metric("Точность модели (R²)", f"{model_info.get('r2_test', 0):.3f}")
-        with col2:
-            st.metric("Средняя ошибка", f"{model_info.get('mae_test', 0):,.0f} ₽")
-        with col3:
-            avg_price = 5000000
-            st.metric("Относительная ошибка", f"{model_info.get('mae_test', 0) / avg_price * 100:.1f}%")
-    else:
-        st.info("Информация о модели пока недоступна")
+    st.write("Модель линейной регрессии, обученная на данных о 50 квартирах.")
+    st.write("Для отображения метрик качества создайте файл model_info.pkl")
 
 with tab2:
     st.subheader("Анализ рынка недвижимости")
@@ -178,7 +169,4 @@ with st.sidebar:
     """)
 
 st.markdown("---")
-
 st.markdown("© 2026 Калькулятор цен на квартиры")
-
-
